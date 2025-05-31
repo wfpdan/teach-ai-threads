@@ -99,7 +99,10 @@ export class DatabaseService {
 
     return data.map(thread => ({
       ...thread,
-      messages: thread.messages.sort((a: Message, b: Message) => 
+      messages: thread.messages.map((msg: any) => ({
+        ...msg,
+        sender: msg.sender as 'teacher' | 'ai'
+      })).sort((a: Message, b: Message) => 
         new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
       )
     }));
@@ -167,7 +170,10 @@ export class DatabaseService {
       throw error;
     }
 
-    return data;
+    return {
+      ...data,
+      sender: data.sender as 'teacher' | 'ai'
+    };
   }
 
   private async getCurrentTeacher(): Promise<Teacher> {

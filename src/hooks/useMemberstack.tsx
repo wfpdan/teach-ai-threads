@@ -17,7 +17,7 @@ export const useMemberstack = () => {
   useEffect(() => {
     const initMemberstack = async () => {
       try {
-        const ms = Memberstack({
+        const ms = Memberstack.init({
           publicKey: import.meta.env.VITE_MEMBERSTACK_PUBLIC_KEY || 'pk_c69b36ba4054b2e02bf3'
         });
 
