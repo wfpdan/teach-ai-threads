@@ -50,14 +50,14 @@ export const Sidebar = ({
         isOpen ? "w-80 translate-x-0" : "w-0 -translate-x-full lg:translate-x-0 lg:w-0"
       )}>
         {/* Header */}
-        <div className="p-4 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50">
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-xl font-bold text-gray-900">Student Threads</h1>
+        <div className="p-4 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50 flex-shrink-0">
+          <div className="flex items-center justify-between mb-3">
+            <h1 className="text-lg font-bold text-gray-900 truncate">Student Threads</h1>
             <Button
               variant="ghost"
               size="icon"
               onClick={onToggle}
-              className="lg:hidden"
+              className="lg:hidden flex-shrink-0"
             >
               <X className="h-5 w-5" />
             </Button>
@@ -65,15 +65,15 @@ export const Sidebar = ({
           
           <Button 
             onClick={onCreateThread}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm"
           >
-            <Plus className="w-4 h-4 mr-2" />
-            New Student Thread
+            <Plus className="w-4 h-4 mr-2 flex-shrink-0" />
+            <span className="truncate">New Student Thread</span>
           </Button>
         </div>
 
         {/* Thread List */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto min-h-0">
           {threads.length === 0 ? (
             <div className="p-6 text-center text-gray-500">
               <User className="w-12 h-12 mx-auto mb-4 opacity-50" />
@@ -81,49 +81,59 @@ export const Sidebar = ({
               <p className="text-xs mt-1">Create your first thread to get started!</p>
             </div>
           ) : (
-            <div className="p-2">
+            <div className="p-3 space-y-2">
               {threads.map((thread) => (
                 <button
                   key={thread.id}
                   onClick={() => onThreadSelect(thread.id)}
                   className={cn(
-                    "w-full p-4 text-left rounded-lg mb-2 transition-all duration-200 group",
+                    "w-full p-3 text-left rounded-lg transition-all duration-200 group border",
                     "hover:bg-blue-50 hover:shadow-sm",
                     activeThreadId === thread.id 
-                      ? "bg-blue-100 border-2 border-blue-200 shadow-md" 
-                      : "bg-gray-50 border border-gray-100"
+                      ? "bg-blue-100 border-blue-200 shadow-md" 
+                      : "bg-gray-50 border-gray-100 hover:border-blue-200"
                   )}
                 >
-                  <div className="flex items-start justify-between mb-2">
-                    <h3 className={cn(
-                      "font-semibold text-sm truncate flex-1",
-                      activeThreadId === thread.id ? "text-blue-900" : "text-gray-900"
-                    )}>
-                      {thread.student.name}
-                    </h3>
-                    {thread.student.lastMessageTime && (
-                      <span className="text-xs text-gray-500 ml-2 flex-shrink-0">
-                        {formatTime(thread.student.lastMessageTime)}
+                  <div className="space-y-2">
+                    {/* Header with name and time */}
+                    <div className="flex items-center justify-between gap-2">
+                      <h3 className={cn(
+                        "font-semibold text-sm truncate",
+                        activeThreadId === thread.id ? "text-blue-900" : "text-gray-900"
+                      )}>
+                        {thread.student.name}
+                      </h3>
+                      {thread.student.lastMessageTime && (
+                        <span className="text-xs text-gray-500 flex-shrink-0">
+                          {formatTime(thread.student.lastMessageTime)}
+                        </span>
+                      )}
+                    </div>
+                    
+                    {/* Tags */}
+                    <div className="flex items-center gap-1 flex-wrap">
+                      <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full flex-shrink-0">
+                        {thread.student.grade}
                       </span>
+                      {thread.student.interests.slice(0, 2).map((interest, index) => (
+                        <span key={index} className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full flex-shrink-0">
+                          {interest}
+                        </span>
+                      ))}
+                      {thread.student.interests.length > 2 && (
+                        <span className="text-xs text-gray-500">
+                          +{thread.student.interests.length - 2}
+                        </span>
+                      )}
+                    </div>
+                    
+                    {/* Last message */}
+                    {thread.student.lastMessage && (
+                      <p className="text-xs text-gray-600 line-clamp-2 leading-relaxed">
+                        {thread.student.lastMessage}
+                      </p>
                     )}
                   </div>
-                  
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
-                      {thread.student.grade}
-                    </span>
-                    {thread.student.interests.slice(0, 2).map((interest, index) => (
-                      <span key={index} className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
-                        {interest}
-                      </span>
-                    ))}
-                  </div>
-                  
-                  {thread.student.lastMessage && (
-                    <p className="text-xs text-gray-600 line-clamp-2 leading-relaxed">
-                      {thread.student.lastMessage}
-                    </p>
-                  )}
                 </button>
               ))}
             </div>
@@ -131,10 +141,10 @@ export const Sidebar = ({
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-gray-100 bg-gray-50">
+        <div className="p-4 border-t border-gray-100 bg-gray-50 flex-shrink-0">
           <div className="text-xs text-gray-500 text-center">
             <div className="flex items-center justify-center gap-1 mb-1">
-              <User className="w-3 h-3" />
+              <User className="w-3 h-3 flex-shrink-0" />
               <span>AI-Powered Teaching Assistant</span>
             </div>
             <p>Personalized lesson plans for every student</p>
