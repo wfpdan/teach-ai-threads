@@ -28,9 +28,9 @@ export const useMemberstack = () => {
         if (currentUser?.data) {
           setUser({
             id: currentUser.data.id,
-            email: currentUser.data.email,
-            firstName: currentUser.data.customFields?.firstName,
-            lastName: currentUser.data.customFields?.lastName
+            email: currentUser.data.auth?.email || '',
+            firstName: (currentUser.data.customFields as any)?.firstName,
+            lastName: (currentUser.data.customFields as any)?.lastName
           });
         }
 
@@ -71,9 +71,9 @@ export const useMemberstack = () => {
       if (member?.data) {
         setUser({
           id: member.data.id,
-          email: member.data.email,
-          firstName: member.data.customFields?.firstName,
-          lastName: member.data.customFields?.lastName
+          email: member.data.auth?.email || '',
+          firstName: (member.data.customFields as any)?.firstName,
+          lastName: (member.data.customFields as any)?.lastName
         });
       } else {
         setUser(null);
