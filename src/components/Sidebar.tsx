@@ -1,8 +1,8 @@
-
-import { Plus, User, Menu, X } from "lucide-react";
+import { Plus, User, Menu, X, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Thread } from "@/pages/Index";
 import { cn } from "@/lib/utils";
+import { useMemberstack } from "@/hooks/useMemberstack";
 
 interface SidebarProps {
   threads: Thread[];
@@ -21,6 +21,8 @@ export const Sidebar = ({
   isOpen,
   onToggle
 }: SidebarProps) => {
+  const { user, logout } = useMemberstack();
+
   const formatTime = (date: Date) => {
     const now = new Date();
     const diff = now.getTime() - date.getTime();
@@ -67,6 +69,32 @@ export const Sidebar = ({
                   <X className="h-5 w-5" />
                 </Button>
               </div>
+
+              {/* User Profile */}
+              {user && (
+                <div className="flex items-center gap-3 mb-3 p-2 bg-white rounded-lg">
+                  <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-semibold">
+                    {user.firstName ? user.firstName.charAt(0) : user.email.charAt(0)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">
+                      {user.firstName && user.lastName 
+                        ? `${user.firstName} ${user.lastName}`
+                        : user.firstName || user.email
+                      }
+                    </p>
+                    <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={logout}
+                    className="h-7 w-7 text-gray-400 hover:text-red-500"
+                  >
+                    <LogOut className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
               
               <Button 
                 onClick={onCreateThread}
