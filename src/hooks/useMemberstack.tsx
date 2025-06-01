@@ -69,8 +69,9 @@ export const useMemberstack = () => {
       let result;
       
       if (typeof memberstack.openModal === 'function') {
-        console.log('Calling openModal with SIGNUP_SIGNIN type...');
-        result = await memberstack.openModal({ type: 'SIGNUP_SIGNIN' });
+        console.log('Calling openModal with string parameter...');
+        // Pass the type as a string, not an object
+        result = await memberstack.openModal('SIGNUP_SIGNIN');
       } else if (typeof memberstack.open === 'function') {
         console.log('Trying alternative open method...');
         result = await memberstack.open();
