@@ -178,7 +178,7 @@ const Index = () => {
           : thread
       ));
 
-      // Generate AI response using the real AI service
+      // Generate AI response using the real AI service with streaming
       try {
         // Find the corresponding database thread to get the full student data
         const dbThread = dbThreads.find(dt => dt.id === activeThread.id);
@@ -187,22 +187,66 @@ const Index = () => {
         }
         
         console.log('Generating AI response for student:', dbThread.student);
-        const aiResponse = await aiService.generateResponse(content, dbThread.student);
         
-        // Add AI response to database
-        const aiMessage = await db.addMessage(activeThread.id, aiResponse, 'ai');
-
-        // Update local state with AI response
+        // Create a temporary AI message that will be updated with streaming content
+        const tempAiMessageId = `temp-${Date.now()}`;
+        let aiMessageContent = '';
+        
+        // Add empty AI message to show streaming indicator
         setThreads(prev => prev.map(thread => 
           thread.id === activeThreadId 
             ? { 
                 ...thread, 
                 messages: [...thread.messages, {
-                  id: aiMessage.id,
-                  content: aiMessage.content,
-                  sender: aiMessage.sender,
-                  timestamp: new Date(aiMessage.created_at)
-                }],
+                  id: tempAiMessageId,
+                  content: '',
+                  sender: 'ai' as const,
+                  timestamp: new Date()
+                }]
+              }
+            : thread
+        ));
+
+        // Handle streaming response
+        const aiResponse = await aiService.generateResponse(
+          content, 
+          dbThread.student,
+          (chunk: string) => {
+            // Update the temporary message with streaming content
+            aiMessageContent += chunk;
+            setThreads(prev => prev.map(thread => 
+              thread.id === activeThreadId 
+                ? { 
+                    ...thread, 
+                    messages: thread.messages.map(msg => 
+                      msg.id === tempAiMessageId 
+                        ? { ...msg, content: aiMessageContent }
+                        : msg
+                    )
+                  }
+                : thread
+            ));
+          }
+        );
+        
+        // Save the complete AI response to database
+        const aiMessage = await db.addMessage(activeThread.id, aiResponse, 'ai');
+
+        // Replace the temporary message with the real one from database
+        setThreads(prev => prev.map(thread => 
+          thread.id === activeThreadId 
+            ? { 
+                ...thread, 
+                messages: thread.messages.map(msg => 
+                  msg.id === tempAiMessageId 
+                    ? {
+                        id: aiMessage.id,
+                        content: aiMessage.content,
+                        sender: aiMessage.sender,
+                        timestamp: new Date(aiMessage.created_at)
+                      }
+                    : msg
+                ),
                 student: {
                   ...thread.student,
                   lastMessage: aiResponse,
@@ -214,6 +258,16 @@ const Index = () => {
       } catch (aiError) {
         console.error('Failed to generate AI response:', aiError);
         toast.error('Failed to generate AI response');
+        
+        // Remove the temporary message and add error message
+        setThreads(prev => prev.map(thread => 
+          thread.id === activeThreadId 
+            ? { 
+                ...thread, 
+                messages: thread.messages.filter(msg => !msg.id.startsWith('temp-'))
+              }
+            : thread
+        ));
         
         // Add fallback error message
         const errorMessage = await db.addMessage(
