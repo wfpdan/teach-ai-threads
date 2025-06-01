@@ -62,49 +62,10 @@ export const useMemberstack = () => {
     try {
       console.log('Attempting to open Memberstack modal...');
       
-      // Try different modal opening approaches
-      let result;
-      
-      // Method 1: Try with no parameters (default behavior)
-      if (typeof memberstack.openModal === 'function') {
-        console.log('Trying openModal() with no parameters...');
-        result = await memberstack.openModal();
-        console.log('Result from openModal():', result);
-        
-        // If that didn't work, try with explicit parameters
-        if (!result || result.type === 'CLOSED') {
-          console.log('First attempt failed, trying with SIGNUP parameter...');
-          result = await memberstack.openModal('SIGNUP');
-          console.log('Result from openModal(SIGNUP):', result);
-        }
-        
-        // If still not working, try LOGIN
-        if (!result || result.type === 'CLOSED') {
-          console.log('Second attempt failed, trying with LOGIN parameter...');
-          result = await memberstack.openModal('LOGIN');
-          console.log('Result from openModal(LOGIN):', result);
-        }
-      }
-      
-      // Method 2: Try alternative approaches if openModal doesn't work
-      if (!result || result.type === 'CLOSED') {
-        console.log('All openModal attempts failed, checking for alternative methods...');
-        console.log('Available methods:', Object.getOwnPropertyNames(memberstack));
-        
-        // Check if there's a different method to open auth
-        if (typeof memberstack.showModal === 'function') {
-          console.log('Trying showModal...');
-          result = await memberstack.showModal();
-        } else if (typeof memberstack.open === 'function') {
-          console.log('Trying open...');
-          result = await memberstack.open();
-        } else if (typeof memberstack.auth === 'object' && typeof memberstack.auth.open === 'function') {
-          console.log('Trying auth.open...');
-          result = await memberstack.auth.open();
-        }
-      }
-      
-      console.log('Final modal result:', result);
+      // Call openModal without any parameters - this is the correct way
+      console.log('Calling openModal() without parameters...');
+      const result = await memberstack.openModal();
+      console.log('OpenModal result:', result);
       
       // Wait for potential auth state changes
       setTimeout(async () => {
