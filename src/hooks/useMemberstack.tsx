@@ -65,6 +65,11 @@ export const useMemberstack = () => {
       console.log('About to call openModal...');
       console.log('openModal method exists:', typeof memberstack.openModal);
       
+      // Check if modal elements exist in DOM before opening
+      console.log('Checking DOM for existing modals...');
+      const existingModals = document.querySelectorAll('[data-memberstack-modal]');
+      console.log('Existing modals found:', existingModals.length);
+      
       // Try different approaches to open the modal
       let result;
       
@@ -72,6 +77,25 @@ export const useMemberstack = () => {
         console.log('Calling openModal with string parameter...');
         // Pass the type as a string, not an object
         result = await memberstack.openModal('SIGNUP_SIGNIN');
+        console.log('OpenModal result:', result);
+        
+        // Check if modal appeared in DOM
+        setTimeout(() => {
+          const modalElements = document.querySelectorAll('[data-memberstack-modal], .memberstack-modal, #memberstack-modal');
+          console.log('Modal elements after openModal:', modalElements.length);
+          
+          // Also check for any elements with high z-index that might be the modal
+          const highZElements = document.querySelectorAll('[style*="z-index"]');
+          console.log('Elements with z-index:', highZElements.length);
+          
+          // Log all elements with memberstack in their class or id
+          const memberstackElements = document.querySelectorAll('[class*="memberstack"], [id*="memberstack"]');
+          console.log('Elements with memberstack in class/id:', memberstackElements.length);
+          memberstackElements.forEach((el, index) => {
+            console.log(`Memberstack element ${index}:`, el.tagName, el.className, el.id);
+          });
+        }, 500);
+        
       } else if (typeof memberstack.open === 'function') {
         console.log('Trying alternative open method...');
         result = await memberstack.open();
