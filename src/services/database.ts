@@ -41,26 +41,9 @@ export class DatabaseService {
 
   constructor(memberstackId: string) {
     this.memberstackId = memberstackId;
-    // Set the RLS context for the current teacher
-    this.setRLSContext();
-  }
-
-  private async setRLSContext() {
-    try {
-      await supabase.rpc('set_config', {
-        setting_name: 'app.current_teacher_id',
-        new_value: this.memberstackId,
-        is_local: false
-      });
-    } catch (error) {
-      console.log('RLS context setting not available, using explicit queries');
-    }
   }
 
   async ensureTeacher(email: string, name?: string): Promise<Teacher> {
-    // Set context before any operations
-    await this.setRLSContext();
-    
     // First, try to get existing teacher
     const { data: existingTeacher, error: fetchError } = await supabase
       .from('teachers')
@@ -95,7 +78,6 @@ export class DatabaseService {
   }
 
   async getThreadsWithStudentsAndMessages(): Promise<Thread[]> {
-    await this.setRLSContext();
     const teacher = await this.getCurrentTeacher();
     
     const { data, error } = await supabase
@@ -124,7 +106,6 @@ export class DatabaseService {
   }
 
   async createStudent(name: string, grade: string, interests: string[]): Promise<Student> {
-    await this.setRLSContext();
     const teacher = await this.getCurrentTeacher();
     
     const { data, error } = await supabase
@@ -146,7 +127,6 @@ export class DatabaseService {
   }
 
   async createThread(studentId: string): Promise<Thread> {
-    await this.setRLSContext();
     const teacher = await this.getCurrentTeacher();
     
     const { data, error } = await supabase
@@ -173,8 +153,6 @@ export class DatabaseService {
   }
 
   async addMessage(threadId: string, content: string, sender: 'teacher' | 'ai'): Promise<Message> {
-    await this.setRLSContext();
-    
     const { data, error } = await supabase
       .from('messages')
       .insert({
