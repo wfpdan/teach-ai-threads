@@ -41,6 +41,9 @@ const Index = () => {
   const [db, setDb] = useState<DatabaseService | null>(null);
   const [aiService] = useState(new AIService());
 
+  // Store the database threads for access to full student data
+  const [dbThreads, setDbThreads] = useState<DBThread[]>([]);
+
   // Initialize database service when user is available
   useEffect(() => {
     if (user) {
@@ -70,10 +73,11 @@ const Index = () => {
     
     try {
       setIsLoading(true);
-      const dbThreads = await db.getThreadsWithStudentsAndMessages();
+      const fetchedDbThreads = await db.getThreadsWithStudentsAndMessages();
+      setDbThreads(fetchedDbThreads); // Store the full database threads
       
       // Convert database format to component format
-      const convertedThreads: Thread[] = dbThreads.map(dbThread => {
+      const convertedThreads: Thread[] = fetchedDbThreads.map(dbThread => {
         const lastMessage = dbThread.messages[dbThread.messages.length - 1];
         
         return {
@@ -176,8 +180,14 @@ const Index = () => {
 
       // Generate AI response using the real AI service
       try {
-        console.log('Generating AI response for student:', activeThread.student);
-        const aiResponse = await aiService.generateResponse(content, activeThread.student);
+        // Find the corresponding database thread to get the full student data
+        const dbThread = dbThreads.find(dt => dt.id === activeThread.id);
+        if (!dbThread) {
+          throw new Error('Database thread not found');
+        }
+        
+        console.log('Generating AI response for student:', dbThread.student);
+        const aiResponse = await aiService.generateResponse(content, dbThread.student);
         
         // Add AI response to database
         const aiMessage = await db.addMessage(activeThread.id, aiResponse, 'ai');
