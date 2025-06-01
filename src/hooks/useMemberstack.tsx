@@ -59,7 +59,8 @@ export const useMemberstack = () => {
     
     try {
       console.log('Opening Memberstack modal...');
-      const result = await memberstack.openModal();
+      // Specify the modal type explicitly
+      const result = await memberstack.openModal({ type: 'SIGNUP_SIGNIN' });
       console.log('Modal result:', result);
       
       // Wait a bit for the auth state to update
