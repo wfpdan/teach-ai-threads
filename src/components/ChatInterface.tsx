@@ -4,6 +4,7 @@ import { Send, Menu, User, Bot } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Thread, Message } from "@/pages/Index";
 import { cn } from "@/lib/utils";
+import ReactMarkdown from 'react-markdown';
 
 interface ChatInterfaceProps {
   thread: Thread | undefined;
@@ -63,10 +64,6 @@ export const ChatInterface = ({
     textarea.style.height = Math.min(textarea.scrollHeight, 200) + 'px';
   };
 
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
-
   if (!thread) {
     return (
       <div className="flex-1 flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -93,16 +90,14 @@ export const ChatInterface = ({
       {/* Header */}
       <div className="bg-white border-b border-gray-200 p-4 shadow-sm">
         <div className="flex items-center gap-3">
-          {!isSidebarOpen && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onToggleSidebar}
-              className="lg:hidden"
-            >
-              <Menu className="h-5 w-5" />
-            </Button>
-          )}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onToggleSidebar}
+            className="flex-shrink-0"
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
           
           <div className="flex items-center gap-3 flex-1">
             <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-semibold">
@@ -226,9 +221,25 @@ const MessageBubble = ({ message }: { message: Message }) => {
           : "bg-white text-gray-900 rounded-tl-none"
       )}>
         <div className="prose prose-sm max-w-none">
-          <div className="whitespace-pre-wrap break-words">
-            {message.content}
-          </div>
+          {isTeacher ? (
+            <div className="whitespace-pre-wrap break-words">
+              {message.content}
+            </div>
+          ) : (
+            <ReactMarkdown 
+              className={cn(
+                "prose prose-sm max-w-none",
+                "prose-headings:text-gray-900 prose-p:text-gray-900",
+                "prose-strong:text-gray-900 prose-code:text-gray-900",
+                "prose-pre:bg-gray-100 prose-pre:text-gray-900",
+                "prose-blockquote:text-gray-700 prose-blockquote:border-gray-300",
+                "prose-ul:text-gray-900 prose-ol:text-gray-900",
+                "prose-li:text-gray-900"
+              )}
+            >
+              {message.content}
+            </ReactMarkdown>
+          )}
         </div>
         
         <div className={cn(
