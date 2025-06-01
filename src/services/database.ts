@@ -129,25 +129,43 @@ export class DatabaseService {
   async createThread(studentId: string): Promise<Thread> {
     const teacher = await this.getCurrentTeacher();
     
-    const { data, error } = await supabase
+    console.log('Creating thread for teacher:', teacher.id, 'student:', studentId);
+    
+    // First, create the thread
+    const { data: newThread, error: threadError } = await supabase
       .from('threads')
       .insert({
         teacher_id: teacher.id,
         student_id: studentId
       })
-      .select(`
-        *,
-        student:students(*),
-        messages(*)
-      `)
+      .select()
       .single();
 
-    if (error) {
-      throw error;
+    if (threadError) {
+      console.error('Error creating thread:', threadError);
+      throw threadError;
     }
 
+    console.log('Thread created:', newThread);
+
+    // Then, get the student data separately
+    const { data: student, error: studentError } = await supabase
+      .from('students')
+      .select('*')
+      .eq('id', studentId)
+      .single();
+
+    if (studentError) {
+      console.error('Error fetching student:', studentError);
+      throw studentError;
+    }
+
+    console.log('Student fetched:', student);
+
+    // Return the thread with student data and empty messages
     return {
-      ...data,
+      ...newThread,
+      student,
       messages: []
     };
   }
