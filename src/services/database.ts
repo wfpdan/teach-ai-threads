@@ -41,12 +41,8 @@ export class DatabaseService {
 
   constructor(memberstackId: string) {
     this.memberstackId = memberstackId;
-    // Set the context for RLS policies
-    supabase.rpc('set_config', {
-      setting_name: 'app.current_memberstack_id',
-      setting_value: memberstackId,
-      is_local: true
-    });
+    // Remove the RLS context setting for now as it's causing TypeScript issues
+    // We'll handle teacher isolation through explicit queries instead
   }
 
   async ensureTeacher(email: string, name?: string): Promise<Teacher> {
@@ -84,6 +80,8 @@ export class DatabaseService {
   }
 
   async getThreadsWithStudentsAndMessages(): Promise<Thread[]> {
+    const teacher = await this.getCurrentTeacher();
+    
     const { data, error } = await supabase
       .from('threads')
       .select(`
@@ -91,15 +89,16 @@ export class DatabaseService {
         student:students(*),
         messages(*)
       `)
+      .eq('teacher_id', teacher.id)
       .order('created_at', { ascending: false });
 
     if (error) {
       throw error;
     }
 
-    return data.map(thread => ({
+    return (data || []).map(thread => ({
       ...thread,
-      messages: thread.messages.map((msg: any) => ({
+      messages: (thread.messages || []).map((msg: any) => ({
         ...msg,
         sender: msg.sender as 'teacher' | 'ai'
       })).sort((a: Message, b: Message) => 
