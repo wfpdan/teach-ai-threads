@@ -18,8 +18,19 @@ export const useMemberstack = () => {
     const initMemberstack = async () => {
       try {
         console.log('Initializing Memberstack...');
+        
+        // Get the public key from environment or use fallback
+        const publicKey = import.meta.env.VITE_MEMBERSTACK_PUBLIC_KEY;
+        console.log('Using public key:', publicKey ? 'Set from environment' : 'Using fallback');
+        
+        if (!publicKey) {
+          console.error('No Memberstack public key found in environment variables');
+          setIsLoading(false);
+          return;
+        }
+
         const ms = Memberstack.init({
-          publicKey: import.meta.env.VITE_MEMBERSTACK_PUBLIC_KEY || 'pk_c69b36ba4054b2e02bf3'
+          publicKey: publicKey
         });
 
         console.log('Memberstack initialized:', ms);
@@ -62,10 +73,21 @@ export const useMemberstack = () => {
     try {
       console.log('Attempting to open Memberstack modal...');
       
-      // Call openModal without any parameters - this is the correct way
-      console.log('Calling openModal() without parameters...');
+      // First, check if the openModal function exists and what it expects
+      console.log('openModal function:', typeof memberstack.openModal);
+      console.log('Memberstack object keys:', Object.keys(memberstack));
+      
+      // Try to open the modal with proper error handling
+      console.log('Calling openModal()...');
       const result = await memberstack.openModal();
       console.log('OpenModal result:', result);
+      
+      // Check if modal opened successfully
+      if (result && result.type !== 'CLOSED') {
+        console.log('Modal opened successfully');
+      } else {
+        console.log('Modal was closed or failed to open');
+      }
       
       // Wait for potential auth state changes
       setTimeout(async () => {
@@ -91,6 +113,20 @@ export const useMemberstack = () => {
     } catch (error) {
       console.error('Login failed:', error);
       console.error('Error details:', error.message, error.stack);
+      
+      // If openModal fails, try to redirect to Memberstack hosted pages
+      console.log('Attempting fallback login method...');
+      try {
+        // Create a manual redirect to Memberstack login page
+        const publicKey = import.meta.env.VITE_MEMBERSTACK_PUBLIC_KEY;
+        if (publicKey) {
+          const loginUrl = `https://app.memberstack.com/login?publicKey=${publicKey}&redirectUrl=${encodeURIComponent(window.location.href)}`;
+          console.log('Redirecting to:', loginUrl);
+          window.location.href = loginUrl;
+        }
+      } catch (fallbackError) {
+        console.error('Fallback login method also failed:', fallbackError);
+      }
     }
   };
 
