@@ -23,6 +23,7 @@ export const useMemberstack = () => {
         });
 
         console.log('Memberstack initialized:', ms);
+        console.log('Available methods on memberstack:', Object.getOwnPropertyNames(ms));
         setMemberstack(ms);
 
         // Check if user is already logged in
@@ -51,16 +52,33 @@ export const useMemberstack = () => {
   }, []);
 
   const login = async () => {
+    console.log('=== LOGIN FUNCTION CALLED ===');
     console.log('Login button clicked, memberstack:', memberstack);
+    console.log('Memberstack type:', typeof memberstack);
+    
     if (!memberstack) {
       console.error('Memberstack not initialized');
       return;
     }
     
     try {
-      console.log('Opening Memberstack modal...');
-      // Specify the modal type explicitly
-      const result = await memberstack.openModal({ type: 'SIGNUP_SIGNIN' });
+      console.log('About to call openModal...');
+      console.log('openModal method exists:', typeof memberstack.openModal);
+      
+      // Try different approaches to open the modal
+      let result;
+      
+      if (typeof memberstack.openModal === 'function') {
+        console.log('Calling openModal with SIGNUP_SIGNIN type...');
+        result = await memberstack.openModal({ type: 'SIGNUP_SIGNIN' });
+      } else if (typeof memberstack.open === 'function') {
+        console.log('Trying alternative open method...');
+        result = await memberstack.open();
+      } else {
+        console.log('Available methods:', Object.getOwnPropertyNames(memberstack));
+        throw new Error('No modal opening method found');
+      }
+      
       console.log('Modal result:', result);
       
       // Wait a bit for the auth state to update
@@ -86,6 +104,7 @@ export const useMemberstack = () => {
       
     } catch (error) {
       console.error('Login failed:', error);
+      console.error('Error details:', error.message, error.stack);
     }
   };
 
