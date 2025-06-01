@@ -23,7 +23,6 @@ export const useMemberstack = () => {
         });
 
         console.log('Memberstack initialized:', ms);
-        console.log('Available methods on memberstack:', Object.getOwnPropertyNames(ms));
         setMemberstack(ms);
 
         // Check if user is already logged in
@@ -54,7 +53,6 @@ export const useMemberstack = () => {
   const login = async () => {
     console.log('=== LOGIN FUNCTION CALLED ===');
     console.log('Login button clicked, memberstack:', memberstack);
-    console.log('Memberstack type:', typeof memberstack);
     
     if (!memberstack) {
       console.error('Memberstack not initialized');
@@ -62,54 +60,56 @@ export const useMemberstack = () => {
     }
     
     try {
-      console.log('About to call openModal...');
-      console.log('openModal method exists:', typeof memberstack.openModal);
+      console.log('Attempting to open Memberstack modal...');
       
-      // Check if modal elements exist in DOM before opening
-      console.log('Checking DOM for existing modals...');
-      const existingModals = document.querySelectorAll('[data-memberstack-modal]');
-      console.log('Existing modals found:', existingModals.length);
-      
-      // Try different approaches to open the modal
+      // Try different modal opening approaches
       let result;
       
+      // Method 1: Try with no parameters (default behavior)
       if (typeof memberstack.openModal === 'function') {
-        console.log('Calling openModal with string parameter...');
-        // Pass the type as a string, not an object
-        result = await memberstack.openModal('SIGNUP_SIGNIN');
-        console.log('OpenModal result:', result);
+        console.log('Trying openModal() with no parameters...');
+        result = await memberstack.openModal();
+        console.log('Result from openModal():', result);
         
-        // Check if modal appeared in DOM
-        setTimeout(() => {
-          const modalElements = document.querySelectorAll('[data-memberstack-modal], .memberstack-modal, #memberstack-modal');
-          console.log('Modal elements after openModal:', modalElements.length);
-          
-          // Also check for any elements with high z-index that might be the modal
-          const highZElements = document.querySelectorAll('[style*="z-index"]');
-          console.log('Elements with z-index:', highZElements.length);
-          
-          // Log all elements with memberstack in their class or id
-          const memberstackElements = document.querySelectorAll('[class*="memberstack"], [id*="memberstack"]');
-          console.log('Elements with memberstack in class/id:', memberstackElements.length);
-          memberstackElements.forEach((el, index) => {
-            console.log(`Memberstack element ${index}:`, el.tagName, el.className, el.id);
-          });
-        }, 500);
+        // If that didn't work, try with explicit parameters
+        if (!result || result.type === 'CLOSED') {
+          console.log('First attempt failed, trying with SIGNUP parameter...');
+          result = await memberstack.openModal('SIGNUP');
+          console.log('Result from openModal(SIGNUP):', result);
+        }
         
-      } else if (typeof memberstack.open === 'function') {
-        console.log('Trying alternative open method...');
-        result = await memberstack.open();
-      } else {
-        console.log('Available methods:', Object.getOwnPropertyNames(memberstack));
-        throw new Error('No modal opening method found');
+        // If still not working, try LOGIN
+        if (!result || result.type === 'CLOSED') {
+          console.log('Second attempt failed, trying with LOGIN parameter...');
+          result = await memberstack.openModal('LOGIN');
+          console.log('Result from openModal(LOGIN):', result);
+        }
       }
       
-      console.log('Modal result:', result);
+      // Method 2: Try alternative approaches if openModal doesn't work
+      if (!result || result.type === 'CLOSED') {
+        console.log('All openModal attempts failed, checking for alternative methods...');
+        console.log('Available methods:', Object.getOwnPropertyNames(memberstack));
+        
+        // Check if there's a different method to open auth
+        if (typeof memberstack.showModal === 'function') {
+          console.log('Trying showModal...');
+          result = await memberstack.showModal();
+        } else if (typeof memberstack.open === 'function') {
+          console.log('Trying open...');
+          result = await memberstack.open();
+        } else if (typeof memberstack.auth === 'object' && typeof memberstack.auth.open === 'function') {
+          console.log('Trying auth.open...');
+          result = await memberstack.auth.open();
+        }
+      }
       
-      // Wait a bit for the auth state to update
+      console.log('Final modal result:', result);
+      
+      // Wait for potential auth state changes
       setTimeout(async () => {
         try {
-          console.log('Checking for user after modal...');
+          console.log('Checking for user after modal interaction...');
           const currentUser = await memberstack.getCurrentMember();
           console.log('User check after modal:', currentUser);
           
