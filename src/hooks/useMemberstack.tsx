@@ -47,7 +47,21 @@ export const useMemberstack = () => {
   const login = async () => {
     if (!memberstack) return;
     try {
-      await memberstack.openModal();
+      const result = await memberstack.openModal();
+      console.log('Login result:', result);
+      
+      // After successful login, get the current member
+      if (result?.data) {
+        const currentUser = await memberstack.getCurrentMember();
+        if (currentUser?.data) {
+          setUser({
+            id: currentUser.data.id,
+            email: currentUser.data.auth?.email || '',
+            firstName: (currentUser.data.customFields as any)?.firstName,
+            lastName: (currentUser.data.customFields as any)?.lastName
+          });
+        }
+      }
     } catch (error) {
       console.error('Login failed:', error);
     }
@@ -62,30 +76,6 @@ export const useMemberstack = () => {
       console.error('Logout failed:', error);
     }
   };
-
-  // Listen for login/logout events
-  useEffect(() => {
-    if (!memberstack) return;
-
-    const handleMemberUpdate = (member: any) => {
-      if (member?.data) {
-        setUser({
-          id: member.data.id,
-          email: member.data.auth?.email || '',
-          firstName: (member.data.customFields as any)?.firstName,
-          lastName: (member.data.customFields as any)?.lastName
-        });
-      } else {
-        setUser(null);
-      }
-    };
-
-    memberstack.on('memberUpdate', handleMemberUpdate);
-
-    return () => {
-      memberstack.off('memberUpdate', handleMemberUpdate);
-    };
-  }, [memberstack]);
 
   return {
     user,
