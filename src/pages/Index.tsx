@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { ChatInterface } from "@/components/ChatInterface";
@@ -6,6 +5,7 @@ import { CreateThreadModal } from "@/components/CreateThreadModal";
 import { AuthGuard } from "@/components/AuthGuard";
 import { useMemberstack } from "@/hooks/useMemberstack";
 import { DatabaseService, Thread as DBThread, Message as DBMessage } from "@/services/database";
+import { AIService } from "@/services/aiService";
 import { toast } from "sonner";
 
 // Legacy interfaces for compatibility with existing components
@@ -39,6 +39,7 @@ const Index = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [db, setDb] = useState<DatabaseService | null>(null);
+  const [aiService] = useState(new AIService());
 
   // Initialize database service when user is available
   useEffect(() => {
@@ -153,22 +154,6 @@ const Index = () => {
       // Add teacher message
       const teacherMessage = await db.addMessage(activeThread.id, content, 'teacher');
 
-      // Simulate AI response after a short delay
-      setTimeout(async () => {
-        try {
-          const aiResponse = await db.addMessage(
-            activeThread.id,
-            `I'm processing your request and will provide a personalized lesson plan based on ${activeThread.student.name}'s profile. This is a simulated response - in the full app, this would be powered by GPT-4o with curriculum context.`,
-            'ai'
-          );
-
-          // Reload threads to get updated data
-          loadThreads();
-        } catch (error) {
-          console.error('Failed to add AI response:', error);
-        }
-      }, 1500);
-
       // Update local state immediately for teacher message
       setThreads(prev => prev.map(thread => 
         thread.id === activeThreadId 
@@ -188,6 +173,59 @@ const Index = () => {
             }
           : thread
       ));
+
+      // Generate AI response using the real AI service
+      try {
+        console.log('Generating AI response for student:', activeThread.student);
+        const aiResponse = await aiService.generateResponse(content, activeThread.student);
+        
+        // Add AI response to database
+        const aiMessage = await db.addMessage(activeThread.id, aiResponse, 'ai');
+
+        // Update local state with AI response
+        setThreads(prev => prev.map(thread => 
+          thread.id === activeThreadId 
+            ? { 
+                ...thread, 
+                messages: [...thread.messages, {
+                  id: aiMessage.id,
+                  content: aiMessage.content,
+                  sender: aiMessage.sender,
+                  timestamp: new Date(aiMessage.created_at)
+                }],
+                student: {
+                  ...thread.student,
+                  lastMessage: aiResponse,
+                  lastMessageTime: new Date()
+                }
+              }
+            : thread
+        ));
+      } catch (aiError) {
+        console.error('Failed to generate AI response:', aiError);
+        toast.error('Failed to generate AI response');
+        
+        // Add fallback error message
+        const errorMessage = await db.addMessage(
+          activeThread.id,
+          'I apologize, but I encountered an error generating a response. Please try again.',
+          'ai'
+        );
+
+        setThreads(prev => prev.map(thread => 
+          thread.id === activeThreadId 
+            ? { 
+                ...thread, 
+                messages: [...thread.messages, {
+                  id: errorMessage.id,
+                  content: errorMessage.content,
+                  sender: errorMessage.sender,
+                  timestamp: new Date(errorMessage.created_at)
+                }]
+              }
+            : thread
+        ));
+      }
     } catch (error) {
       console.error('Failed to send message:', error);
       toast.error('Failed to send message');
