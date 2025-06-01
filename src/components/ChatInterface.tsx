@@ -226,19 +226,11 @@ const MessageBubble = ({ message }: { message: Message }) => {
               {message.content}
             </div>
           ) : (
-            <ReactMarkdown 
-              className={cn(
-                "prose prose-sm max-w-none",
-                "prose-headings:text-gray-900 prose-p:text-gray-900",
-                "prose-strong:text-gray-900 prose-code:text-gray-900",
-                "prose-pre:bg-gray-100 prose-pre:text-gray-900",
-                "prose-blockquote:text-gray-700 prose-blockquote:border-gray-300",
-                "prose-ul:text-gray-900 prose-ol:text-gray-900",
-                "prose-li:text-gray-900"
-              )}
-            >
-              {message.content}
-            </ReactMarkdown>
+            <div className="prose prose-sm max-w-none prose-headings:text-gray-900 prose-p:text-gray-900 prose-strong:text-gray-900 prose-code:text-gray-900 prose-pre:bg-gray-100 prose-pre:text-gray-900 prose-blockquote:text-gray-700 prose-blockquote:border-gray-300 prose-ul:text-gray-900 prose-ol:text-gray-900 prose-li:text-gray-900">
+              <ReactMarkdown>
+                {message.content}
+              </ReactMarkdown>
+            </div>
           )}
         </div>
         
